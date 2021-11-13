@@ -8,71 +8,34 @@ torch.set_default_tensor_type(torch.FloatTensor)
 
 print("Loading dataset...")
 
-# All image directory paths
-originalImg_dir = "./original-images/*.jpg"
+def loadDirectory(filepath, isOrig):
+    # load directory
+    files = glob.glob(filepath)
 
-waldo64_dir = "./64/waldo/*.jpg"
-notWaldo64_dir = "./64/notwaldo/*.jpg"
-
-waldo128_dir = "./128/waldo/*.jpg"
-notWaldo128_dir = "./128/notwaldo/*.jpg"
-
-waldo256_dir = "./256/waldo/*.jpg"
-notWaldo256_dir = "./256/notwaldo/*.jpg"
-
-# Loading directories
-origImg_files = glob.glob(originalImg_dir)
-
-waldo64_files = glob.glob(waldo64_dir)
-waldo128_files = glob.glob(waldo128_dir)
-waldo256_files = glob.glob(waldo256_dir)
-
-notWaldo64_files = glob.glob(notWaldo64_dir)
-notWaldo128_files = glob.glob(notWaldo128_dir)
-notWaldo256_files = glob.glob(notWaldo256_dir)
-
-def loadDirectory(files):
     arr = []
     for fl in files:
         img = cv2.imread(fl)
-        arr.append(img)
+        arr.append(torch.Tensor(img))
 
-    return arr 
+    # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
+    if(isOrig):
+        return arr
+    
+    tensorList = torch.stack(arr)
 
-# Arrays containing all image info
-origImg_data = loadDirectory(origImg_files)
+    # shuffle data
+    index = torch.randperm(tensorList.shape[0])
+    tensorList = tensorList[index].view(tensorList.size()) 
 
-waldo64_data = loadDirectory(waldo64_files)
-waldo128_data = loadDirectory(waldo128_files)
-waldo256_data = loadDirectory(waldo256_files)
+    return tensorList
 
-notWaldo64_data = loadDirectory(notWaldo64_files)
-notWaldo128_data = loadDirectory(notWaldo128_files)
-notWaldo256_data = loadDirectory(notWaldo256_files)
+originalImg = loadDirectory("./original-images/*.jpg", True)
 
-# Converting each array into a tensor
-origImg_tensor = torch.tensor(origImg_data)
+waldo64 = loadDirectory("./64/waldo/*.jpg", False)
+notWaldo64 = loadDirectory("./64/notwaldo/*.jpg", False)
 
-waldo64_tensor = torch.tensor(waldo64_data)
-waldo128_tensor = torch.tensor(waldo128_data)
-waldo256_tensor = torch.tensor(waldo256_data)
+waldo128 = loadDirectory("./128/waldo/*.jpg", False)
+notWaldo128 = loadDirectory("./128/notwaldo/*.jpg", False)
 
-notWaldo64_tensor = torch.tensor(waldo64_data)
-notWaldo128_tensor = torch.tensor(waldo128_data)
-notWaldo256_tensor = torch.tensor(waldo256_data)
-
-# Randomly shuffle the data using torch.randperm
-def shuffleData(theTensor):
-    index = torch.randperm(theTensor.shape[0])
-    theTensor = theTensor[index].view(theTensor.size())
-    return theTensor
-
-origImg_tensor = shuffleData(origImg_tensor)
-
-waldo64_tensor = shuffleData(waldo64_tensor)
-waldo128_tensor = shuffleData(waldo128_tensor)
-waldo256_tensor = shuffleData(waldo256_tensor)
-
-notWaldo64_tensor = shuffleData(notWaldo64_tensor)
-notWaldo128_tensor = shuffleData(notWaldo128_tensor)
-notWaldo256_tensor = shuffleData(notWaldo256_tensor)
+waldo256 = loadDirectory("./256/waldo/*.jpg", False)
+notWaldo256 = loadDirectory("./256/notwaldo/*.jpg", False)
