@@ -94,8 +94,25 @@ class WaldoFinder(nn.Module):
 waldoFinder = WaldoFinder()
 
 # Divide into training and test set
-trainLoader = torch.utils.data.DataLoader(waldoDataset, shuffle=True, batch_size=10)
-items, labels = next(iter(trainLoader))
+tenPercent = int(len(waldoDataset) * 0.1)
+ninetyPercent = len(waldoDataset) - tenPercent
+trainSet, testSet = torch.utils.data.random_split(waldoDataset, [ninetyPercent, tenPercent])
 
+trainLoader = torch.utils.data.DataLoader(trainSet, shuffle=True, batch_size=10)
+testLoader = torch.utils.data.DataLoader(testSet, shuffle=True, batch_size=10)
+
+# Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 lossFunc = nn.MSELoss()
+
+'''
+for items, labels in trainLoader:
+    preds = waldoFinder(items)
+
+    loss = lossFunc(preds, labels)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+'''
+
+# Test Loop
