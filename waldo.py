@@ -167,11 +167,10 @@ for items, labels in trainLoader:
     print("One loop completed")
 
 # Test Loop
+#correct = 0
 #for items, labels in testLoader:
 #    preds = waldoFinder(items)
-#
-#correct = 0
-#place = 0
-#
-#for val in preds:
-#    if val = 
+#    if preds == labels:
+#        correct = correct + 1
+
+# Output stats for AI
