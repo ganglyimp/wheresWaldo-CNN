@@ -132,7 +132,10 @@ class WaldoFinder(nn.Module):
         t = F.relu(t)
 
         t = self.conv10(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
+
+        # Returns 0 or 1, if Waldo is present or not
+        t = t.round()
 
         return t
 
