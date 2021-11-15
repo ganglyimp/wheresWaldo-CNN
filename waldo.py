@@ -75,7 +75,7 @@ waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 
 allWaldos = torch.cat((waldos, notWaldos), 0)
 
 waldoDataset = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
-
+print("Dataset loaded")
 
 # ============
 #   THE CNN
@@ -99,12 +99,12 @@ class WaldoFinder(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
         self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
         self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=2, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=1, padding=1)
 
         # Scales weights by gain parameter
         nn.init.xavier_uniform_(self.conv1.weight)
@@ -118,43 +118,67 @@ class WaldoFinder(nn.Module):
         nn.init.xavier_uniform_(self.conv9.weight)
         nn.init.xavier_uniform_(self.conv10.weight)
     
+        # Batch Normalization
+        self.norm1 = nn.BatchNorm2d(C)
+        self.norm2 = nn.BatchNorm2d(C)
+        self.norm3 = nn.BatchNorm2d(C)
+        self.norm4 = nn.BatchNorm2d(C)
+        self.norm5 = nn.BatchNorm2d(C)
+        self.norm6 = nn.BatchNorm2d(C)
+        self.norm7 = nn.BatchNorm2d(C)
+        self.norm8 = nn.BatchNorm2d(C)
+        self.norm9 = nn.BatchNorm2d(C)
+        self.norm10 = nn.BatchNorm2d(C)
+
+    #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
+        t = self.norm1(t)
         t = F.Sigmoid(t)
 
         t = self.conv2(t)
+        t = self.norm2(t)
         t = F.Sigmoid(t)
 
         t = self.conv3(t)
+        t = self.norm3(t)
         t = F.Sigmoid(t)
 
         t = self.conv4(t)
+        t = self.norm4(t)
         t = F.Sigmoid(t)
 
         t = self.conv5(t)
+        t = self.norm5(t)
         t = F.Sigmoid(t)
 
         t = self.conv6(t)
+        t = self.norm6(t)
         t = F.Sigmoid(t)
 
         t = self.conv7(t)
+        t = self.norm7(t)
         t = F.Sigmoid(t)
 
         t = self.conv8(t)
+        t = self.norm8(t)
         t = F.Sigmoid(t)
 
         t = self.conv9(t)
+        t = self.norm9(t)
         t = F.Sigmoid(t)
 
         t = self.conv10(t)
+        t = self.norm10(t)
         t = F.Sigmoid(t)
 
-        # Returns 0 or 1, if Waldo is present or not
-        t = t.round()
+        # Round for binary output
+        t = round(t)
 
         return t
 
 waldoFinder = WaldoFinder()
+print("Network Initialized")
 
 # Divide into training and test set
 tenPercent = int(len(waldoDataset) * 0.1)
@@ -163,12 +187,13 @@ trainSet, testSet = torch.utils.data.random_split(waldoDataset, [ninetyPercent, 
 
 trainLoader = torch.utils.data.DataLoader(trainSet, shuffle=True, batch_size=10)
 testLoader = torch.utils.data.DataLoader(testSet, shuffle=True, batch_size=10)
+print("Dataset shuffled")
 
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 lossFunc = nn.MSELoss()
 
-'''
+print("Begining training...")
 for items, labels in trainLoader:
     preds = waldoFinder(items)
 
@@ -176,6 +201,13 @@ for items, labels in trainLoader:
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-'''
+    print("One loop completed")
 
 # Test Loop
+#correct = 0
+#for items, labels in testLoader:
+#    preds = waldoFinder(items)
+#    if preds == labels:
+#        correct = correct + 1
+
+# Output stats for AI
