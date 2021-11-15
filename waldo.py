@@ -81,12 +81,57 @@ class WaldoFinder(nn.Module):
 
         # Convolutional Layers
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=2, padding=1)
 
         # Scales weights by gain parameter
         nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.xavier_uniform_(self.conv3.weight)
+        nn.init.xavier_uniform_(self.conv4.weight)
+        nn.init.xavier_uniform_(self.conv5.weight)
+        nn.init.xavier_uniform_(self.conv6.weight)
+        nn.init.xavier_uniform_(self.conv7.weight)
+        nn.init.xavier_uniform_(self.conv8.weight)
+        nn.init.xavier_uniform_(self.conv9.weight)
+        nn.init.xavier_uniform_(self.conv10.weight)
     
     def forward(self, t):
         t = self.conv1(t)
+        t = F.relu(t)
+
+        t = self.conv2(t)
+        t = F.relu(t)
+
+        t = self.conv3(t)
+        t = F.relu(t)
+
+        t = self.conv4(t)
+        t = F.relu(t)
+
+        t = self.conv5(t)
+        t = F.relu(t)
+
+        t = self.conv6(t)
+        t = F.relu(t)
+
+        t = self.conv7(t)
+        t = F.relu(t)
+
+        t = self.conv8(t)
+        t = F.relu(t)
+
+        t = self.conv9(t)
+        t = F.relu(t)
+
+        t = self.conv10(t)
         t = F.relu(t)
 
         return t
