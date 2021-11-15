@@ -60,7 +60,7 @@ waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 
 allWaldos = torch.cat((waldos, notWaldos), 0)
 
 waldoDataset = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
-
+print("Dataset loaded")
 
 # ============
 #   THE CNN
@@ -84,12 +84,12 @@ class WaldoFinder(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
         self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
         self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=2, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=1, padding=1)
 
         # Scales weights by gain parameter
         nn.init.xavier_uniform_(self.conv1.weight)
@@ -103,6 +103,7 @@ class WaldoFinder(nn.Module):
         nn.init.xavier_uniform_(self.conv9.weight)
         nn.init.xavier_uniform_(self.conv10.weight)
     
+    #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
         t = F.Sigmoid(t)
@@ -134,12 +135,13 @@ class WaldoFinder(nn.Module):
         t = self.conv10(t)
         t = F.Sigmoid(t)
 
-        # Returns 0 or 1, if Waldo is present or not
+        # Round for binary output
         t = t.round()
 
         return t
 
 waldoFinder = WaldoFinder()
+print("Network Initialized")
 
 # Divide into training and test set
 tenPercent = int(len(waldoDataset) * 0.1)
@@ -148,12 +150,13 @@ trainSet, testSet = torch.utils.data.random_split(waldoDataset, [ninetyPercent, 
 
 trainLoader = torch.utils.data.DataLoader(trainSet, shuffle=True, batch_size=10)
 testLoader = torch.utils.data.DataLoader(testSet, shuffle=True, batch_size=10)
+print("Dataset shuffled")
 
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 lossFunc = nn.MSELoss()
 
-'''
+print("Begining training...")
 for items, labels in trainLoader:
     preds = waldoFinder(items)
 
@@ -161,6 +164,14 @@ for items, labels in trainLoader:
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-'''
+    print("One loop completed")
 
 # Test Loop
+#for items, labels in testLoader:
+#    preds = waldoFinder(items)
+#
+#correct = 0
+#place = 0
+#
+#for val in preds:
+#    if val = 
