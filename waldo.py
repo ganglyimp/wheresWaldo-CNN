@@ -16,15 +16,30 @@ def loadDirectory(filepath, isOrig):
     files = glob.glob(filepath)
 
     arr = []
+    i = 0
     for fl in files:
         img = cv2.imread(fl)
 
         # resize image to 256x256
         if(isOrig != True and img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
-
-        arr.append(torch.Tensor(img))
-
+        
+        #holder = np.zeros(img.shape)
+        # indices = np.where(img[:,:,2] > 150)
+        # print(indices)
+        # img[indices] = 255
+        tenImg = torch.Tensor(img)
+        # # redfilter = (tenImg[:,:,2] > 130) & (tenImg[:,:,1] < 100) & (tenImg[:,:,0] < 110)
+        # # tenImg[:,:,0] = tenImg[:,:,0] * redfilter
+        # # tenImg[:,:,1] = tenImg[:,:,1] * redfilter
+        # # tenImg[:,:,2] = tenImg[:,:,2] * redfilter
+        # if i == 0:
+        #     tenImg[:,:,:] = tenImg[:,:,:]/255
+        #     cv2.imshow("IMAGE",tenImg.numpy())
+        #     cv2.waitKey(0)
+        #     i+=1
+        arr.append(tenImg)
+        print("reached")
     # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
     if(isOrig):
         return arr
