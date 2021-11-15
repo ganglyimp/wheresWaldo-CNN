@@ -16,15 +16,30 @@ def loadDirectory(filepath, isOrig):
     files = glob.glob(filepath)
 
     arr = []
+    i = 0
     for fl in files:
         img = cv2.imread(fl)
 
         # resize image to 256x256
         if(isOrig != True and img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
-
-        arr.append(torch.Tensor(img))
-
+        
+        #holder = np.zeros(img.shape)
+        # indices = np.where(img[:,:,2] > 150)
+        # print(indices)
+        # img[indices] = 255
+        tenImg = torch.Tensor(img)
+        # # redfilter = (tenImg[:,:,2] > 130) & (tenImg[:,:,1] < 100) & (tenImg[:,:,0] < 110)
+        # # tenImg[:,:,0] = tenImg[:,:,0] * redfilter
+        # # tenImg[:,:,1] = tenImg[:,:,1] * redfilter
+        # # tenImg[:,:,2] = tenImg[:,:,2] * redfilter
+        # if i == 0:
+        #     tenImg[:,:,:] = tenImg[:,:,:]/255
+        #     cv2.imshow("IMAGE",tenImg.numpy())
+        #     cv2.waitKey(0)
+        #     i+=1
+        arr.append(tenImg)
+        print("reached")
     # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
     if(isOrig):
         return arr
@@ -81,13 +96,61 @@ class WaldoFinder(nn.Module):
 
         # Convolutional Layers
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
+        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=2, padding=1)
 
         # Scales weights by gain parameter
         nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.xavier_uniform_(self.conv3.weight)
+        nn.init.xavier_uniform_(self.conv4.weight)
+        nn.init.xavier_uniform_(self.conv5.weight)
+        nn.init.xavier_uniform_(self.conv6.weight)
+        nn.init.xavier_uniform_(self.conv7.weight)
+        nn.init.xavier_uniform_(self.conv8.weight)
+        nn.init.xavier_uniform_(self.conv9.weight)
+        nn.init.xavier_uniform_(self.conv10.weight)
     
     def forward(self, t):
         t = self.conv1(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv2(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv3(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv4(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv5(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv6(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv7(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv8(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv9(t)
+        t = F.Sigmoid(t)
+
+        t = self.conv10(t)
+        t = F.Sigmoid(t)
+
+        # Returns 0 or 1, if Waldo is present or not
+        t = t.round()
 
         return t
 
