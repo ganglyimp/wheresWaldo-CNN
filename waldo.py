@@ -103,40 +103,62 @@ class WaldoFinder(nn.Module):
         nn.init.xavier_uniform_(self.conv9.weight)
         nn.init.xavier_uniform_(self.conv10.weight)
     
+        # Batch Normalization
+        self.norm1 = nn.BatchNorm2d(C)
+        self.norm2 = nn.BatchNorm2d(C)
+        self.norm3 = nn.BatchNorm2d(C)
+        self.norm4 = nn.BatchNorm2d(C)
+        self.norm5 = nn.BatchNorm2d(C)
+        self.norm6 = nn.BatchNorm2d(C)
+        self.norm7 = nn.BatchNorm2d(C)
+        self.norm8 = nn.BatchNorm2d(C)
+        self.norm9 = nn.BatchNorm2d(C)
+        self.norm10 = nn.BatchNorm2d(C)
+
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
+        t = self.norm1(t)
         t = F.Sigmoid(t)
 
         t = self.conv2(t)
+        t = self.norm2(t)
         t = F.Sigmoid(t)
 
         t = self.conv3(t)
+        t = self.norm3(t)
         t = F.Sigmoid(t)
 
         t = self.conv4(t)
+        t = self.norm4(t)
         t = F.Sigmoid(t)
 
         t = self.conv5(t)
+        t = self.norm5(t)
         t = F.Sigmoid(t)
 
         t = self.conv6(t)
+        t = self.norm6(t)
         t = F.Sigmoid(t)
 
         t = self.conv7(t)
+        t = self.norm7(t)
         t = F.Sigmoid(t)
 
         t = self.conv8(t)
+        t = self.norm8(t)
         t = F.Sigmoid(t)
 
         t = self.conv9(t)
+        t = self.norm9(t)
         t = F.Sigmoid(t)
 
         t = self.conv10(t)
+        t = self.norm10(t)
         t = F.Sigmoid(t)
 
         # Round for binary output
-        t = t.round()
+        t = round(t)
 
         return t
 
