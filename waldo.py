@@ -105,31 +105,31 @@ class WaldoFinder(nn.Module):
     
     def forward(self, t):
         t = self.conv1(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv2(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv3(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv4(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv5(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv6(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv7(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv8(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv9(t)
-        t = F.relu(t)
+        t = F.Sigmoid(t)
 
         t = self.conv10(t)
         t = F.Sigmoid(t)
