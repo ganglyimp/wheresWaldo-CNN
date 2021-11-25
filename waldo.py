@@ -7,7 +7,10 @@ import glob
 import torch
 import random
 import numpy as np
-torch.set_default_tensor_type(torch.FloatTensor)
+import torchvision
+import torchvision.transforms as tf 
+from torchvision import datasets
+#torch.set_default_tensor_type(torch.FloatTensor)
 
 print("Loading dataset...")
 
@@ -16,30 +19,17 @@ def loadDirectory(filepath, isOrig):
     files = glob.glob(filepath)
 
     arr = []
-    i = 0
     for fl in files:
         img = cv2.imread(fl)
 
         # resize image to 256x256
         if(isOrig != True and img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
-        
-        #holder = np.zeros(img.shape)
-        # indices = np.where(img[:,:,2] > 150)
-        # print(indices)
-        # img[indices] = 255
+
         tenImg = torch.Tensor(img)
-        # # redfilter = (tenImg[:,:,2] > 130) & (tenImg[:,:,1] < 100) & (tenImg[:,:,0] < 110)
-        # # tenImg[:,:,0] = tenImg[:,:,0] * redfilter
-        # # tenImg[:,:,1] = tenImg[:,:,1] * redfilter
-        # # tenImg[:,:,2] = tenImg[:,:,2] * redfilter
-        # if i == 0:
-        #     tenImg[:,:,:] = tenImg[:,:,:]/255
-        #     cv2.imshow("IMAGE",tenImg.numpy())
-        #     cv2.waitKey(0)
-        #     i+=1
-        arr.append(tenImg)
-        print("reached")
+
+        arr.append(tenImg.T)
+
     # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
     if(isOrig):
         return arr
@@ -82,8 +72,6 @@ print("Dataset loaded")
 # ============
 import torch.nn as nn
 import torch.nn.functional as F 
-import torchvision
-import torchvision.transforms as tf 
 import torch.optim as optim
 
 # Network should output whether or not the input image has waldo in it
@@ -91,89 +79,49 @@ class WaldoFinder(nn.Module):
     def __init__(self):
         super(WaldoFinder, self).__init__()
 
-        C = 256 #in/out channels
-        K = 3 #kernel size
+        # Block 1
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=5, stride=1, padding=2)
+        self.batchNorm1 = nn.BatchNorm2d(num_features=256)
+        self.dropout1 = nn.Dropout2d(p=0.1)
 
-        # Convolutional Layers
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=1, padding=1)
+        # Block 2
+        self.conv2 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.batchNorm2 = nn.BatchNorm2d(num_features=128)
+        self.dropout2 = nn.Dropout2d(p=0.1)
 
-        # Scales weights by gain parameter
-        nn.init.xavier_uniform_(self.conv1.weight)
-        nn.init.xavier_uniform_(self.conv2.weight)
-        nn.init.xavier_uniform_(self.conv3.weight)
-        nn.init.xavier_uniform_(self.conv4.weight)
-        nn.init.xavier_uniform_(self.conv5.weight)
-        nn.init.xavier_uniform_(self.conv6.weight)
-        nn.init.xavier_uniform_(self.conv7.weight)
-        nn.init.xavier_uniform_(self.conv8.weight)
-        nn.init.xavier_uniform_(self.conv9.weight)
-        nn.init.xavier_uniform_(self.conv10.weight)
-    
-        # Batch Normalization
-        self.norm1 = nn.BatchNorm2d(C)
-        self.norm2 = nn.BatchNorm2d(C)
-        self.norm3 = nn.BatchNorm2d(C)
-        self.norm4 = nn.BatchNorm2d(C)
-        self.norm5 = nn.BatchNorm2d(C)
-        self.norm6 = nn.BatchNorm2d(C)
-        self.norm7 = nn.BatchNorm2d(C)
-        self.norm8 = nn.BatchNorm2d(C)
-        self.norm9 = nn.BatchNorm2d(C)
-        self.norm10 = nn.BatchNorm2d(C)
+        # Block 3
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.batchNorm3 = nn.BatchNorm2d(num_features=64)
+        self.dropout3 = nn.Dropout2d(p=0.1)
+
+        # Block 4
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=32, stride=1, padding=0)
+
+        self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
-        t = self.norm1(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm1(t)
+        t = F.relu(t)
+        t = self.dropout1(t)
+        t = self.maxPool(t)
 
         t = self.conv2(t)
-        t = self.norm2(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm2(t)
+        t = F.relu(t)
+        t = self.dropout2(t)
+        t = self.maxPool(t)
 
         t = self.conv3(t)
-        t = self.norm3(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm3(t)
+        t = F.relu(t)
+        t = self.dropout3(t)
+        t = self.maxPool(t)
 
         t = self.conv4(t)
-        t = self.norm4(t)
-        t = F.Sigmoid(t)
 
-        t = self.conv5(t)
-        t = self.norm5(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv6(t)
-        t = self.norm6(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv7(t)
-        t = self.norm7(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv8(t)
-        t = self.norm8(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv9(t)
-        t = self.norm9(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv10(t)
-        t = self.norm10(t)
-        t = F.Sigmoid(t)
-
-        # Round for binary output
-        t = round(t)
+        t = torch.round(t)
 
         return t
 
@@ -191,14 +139,15 @@ print("Dataset shuffled")
 
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
-lossFunc = nn.MSELoss()
+#lossFunc = nn.CrossEntropyLoss()
+lossFunc = nn.BSELoss()
 
 print("Begining training...")
 for items, labels in trainLoader:
-    preds = waldoFinder(items)
-
-    loss = lossFunc(preds, labels)
     optimizer.zero_grad()
+    preds = waldoFinder(items).unsqueeze(dim=0)
+
+    loss = lossFunc(preds, labels.unsqueeze(dim=0))
     loss.backward()
     optimizer.step()
     print("One loop completed")
