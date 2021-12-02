@@ -52,9 +52,12 @@ def createNewWaldoSamples(notWaldos, overlay):
         randX = random.randint(0, iRows-oRows)
         randY = random.randint(0, iCols-oCols)
 
-        newOverlay = cv2.addWeighted(newImg[randX:randX+oRows, randY:randY+oCols], 1.0, overlay, 1.0, 1)
+        aOverlay = overlay[:, :, 3] / 255.0
+        aImg = 1.0 - aOverlay
 
-        newImg[randX:randX+oRows, randY:randY+oCols] = newOverlay
+        for c in range(0, 3):
+            newImg[randX:randX+oRows, randY:randY+oCols, c] = (aOverlay * overlay[:, :, c] + aImg * newImg[randX:randX+oRows, randY:randY+oCols, c])
+
         newWaldos.append(newImg[:, :, :3])
     
     return newWaldos
