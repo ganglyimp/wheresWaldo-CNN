@@ -31,7 +31,7 @@ def loadDirectory(filepath, isOrig):
     return arr
 
 def numpyToTensor(arr):
-    #convert to tensor
+    #convert to tensor (TODO)
 
     #shuffle tensor
     tensorList = torch.stack(arr)
@@ -83,18 +83,24 @@ moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
 moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
 moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
-cv2.imshow("Inserted Waldo 64", moreWaldo64[0])
-cv2.imshow("Inserted Waldo 128", moreWaldo128[0])
-cv2.imshow("Inserted Waldo 256", moreWaldo256[0])
-cv2.waitKey(0)
-cv2.destroyAllWindows() 
+# Converting numpy arrays into tensors (TODO: FINISH CONVERSION FUNCTION)
+waldo64Tensor = numpyToTensor(waldo64)
+waldo128Tensor = numpyToTensor(waldo128)
+waldo256Tensor = numpyToTensor(waldo256)
 
-# Converting numpy arrays into tensors
+moreWaldo64Tensor = numpyToTensor(moreWaldo64)
+moreWaldo128Tensor = numpyToTensor(moreWaldo128)
+moreWaldo256Tensor = numpyToTensor(moreWaldo256)
+
+notWaldo64Tensor = numpyToTensor(notWaldo64)
+notWaldo128Tensor = numpyToTensor(notWaldo128)
+notWaldo256Tensor = numpyToTensor(notWaldo256)
+
 
 '''
 # Combining into two lists: waldos and not waldos
-waldos = torch.cat((waldo64, waldo128, waldo256), 0)
-notWaldos = torch.cat((notWaldo64, notWaldo128, notWaldo256), 0)
+waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
+notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
 
 # Create labels & combine
 waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
