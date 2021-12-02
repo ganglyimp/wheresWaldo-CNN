@@ -26,21 +26,39 @@ def loadDirectory(filepath, isOrig):
         if(isOrig != True and img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
 
-        tenImg = torch.Tensor(img)
+        arr.append(img)
 
-        arr.append(tenImg.T)
+    return arr
 
-    # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
-    if(isOrig):
-        return arr
-    
+def numpyToTensor(arr):
+    #convert to tensor
+
+    #shuffle tensor
     tensorList = torch.stack(arr)
 
-    # shuffle data
     index = torch.randperm(tensorList.shape[0])
     tensorList = tensorList[index].view(tensorList.size()) 
 
     return tensorList
+
+def createNewWaldoSamples(notWaldos, overlay):
+    newWaldos = []
+    oRows, oCols, oChannels = overlay.shape
+    for img in notWaldos:
+        newImg = img
+        iRows, iCols, iChannels = newImg.shape
+        newImg = np.dstack([newImg, np.ones((iRows, iCols), dtype='uint8') * 255])
+
+        randX = random.randint(0, iRows-oRows)
+        randY = random.randint(0, iCols-oCols)
+
+        newOverlay = cv2.addWeighted(newImg[randX:randX+oRows, randY:randY+oCols], 1.0, overlay, 1.0, 1)
+
+        newImg[randX:randX+oRows, randY:randY+oCols] = newOverlay
+        newWaldos.append(newImg[:, :, :3])
+    
+    return newWaldos
+        
 
 originalImg = loadDirectory("./original-images/*.jpg", True)
 
@@ -53,12 +71,27 @@ notWaldo128 = loadDirectory("./128/notwaldo/*.jpg", False)
 waldo256 = loadDirectory("./256/waldo/*.jpg", False)
 notWaldo256 = loadDirectory("./256/notwaldo/*.jpg", False)
 
+# Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
+waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
+waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
+waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
+
+moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
+moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
+moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
+
+cv2.imshow("Inserted Waldo 64", moreWaldo64[0])
+cv2.imshow("Inserted Waldo 128", moreWaldo128[0])
+cv2.imshow("Inserted Waldo 256", moreWaldo256[0])
+cv2.waitKey(0)
+cv2.destroyAllWindows() 
+
+# Converting numpy arrays into tensors
+
+'''
 # Combining into two lists: waldos and not waldos
 waldos = torch.cat((waldo64, waldo128, waldo256), 0)
 notWaldos = torch.cat((notWaldo64, notWaldo128, notWaldo256), 0)
-
-# Issue: 97 Waldo : 6940 Not Waldo
-# Need to augment dataset to inflate Waldo instances
 
 # Create labels & combine
 waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
@@ -140,7 +173,7 @@ print("Dataset shuffled")
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 #lossFunc = nn.CrossEntropyLoss()
-lossFunc = nn.BSELoss()
+lossFunc = nn.BCELoss()
 
 print("Begining training...")
 for items, labels in trainLoader:
@@ -160,3 +193,4 @@ for items, labels in trainLoader:
 #        correct = correct + 1
 
 # Output stats for AI
+'''
