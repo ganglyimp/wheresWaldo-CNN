@@ -28,8 +28,8 @@ def loadDirectory(filepath, isOrig):
     return arr
 
 def numpyToTensor(arr):
-    #convert to tensor
     arr = np.array(arr)
+    arr = arr.transpose((0, 3, 1, 2))
     tensorList = torch.FloatTensor(arr)
 
     return tensorList
@@ -103,7 +103,6 @@ allWaldos = torch.cat((waldos, notWaldos), 0)
 waldoDataset = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
 print("Dataset loaded")
 
-'''
 # ============
 #   THE CNN
 # ============
@@ -138,11 +137,15 @@ class WaldoFinder(nn.Module):
 
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
+        print("Initial: ", t.shape)
+
         t = self.conv1(t)
         t = self.batchNorm1(t)
         t = F.relu(t)
         t = self.dropout1(t)
         t = self.maxPool(t)
+
+        print("Block 1: ", t.shape)
 
         t = self.conv2(t)
         t = self.batchNorm2(t)
@@ -150,13 +153,19 @@ class WaldoFinder(nn.Module):
         t = self.dropout2(t)
         t = self.maxPool(t)
 
+        print("Block 2: ", t.shape)
+
         t = self.conv3(t)
         t = self.batchNorm3(t)
         t = F.relu(t)
         t = self.dropout3(t)
         t = self.maxPool(t)
 
+        print("Block 3: ", t.shape)
+
         t = self.conv4(t)
+
+        print("Final Layer: ", t.shape)
 
         t = torch.round(t)
 
@@ -197,4 +206,3 @@ for items, labels in trainLoader:
 #        correct = correct + 1
 
 # Output stats for AI
-'''
