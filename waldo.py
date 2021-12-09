@@ -1,18 +1,15 @@
 # ================
 #  PREPROCESSING
 # ================
-import cv2 
-import os
 import glob
-import torch
 import random
+import cv2
+import torch
 import numpy as np
 import torchvision
 import torchvision.transforms as tf 
 from torchvision import datasets
 #torch.set_default_tensor_type(torch.FloatTensor)
-
-print("Loading dataset...")
 
 def loadDirectory(filepath, isOrig):
     # load directory
@@ -31,13 +28,9 @@ def loadDirectory(filepath, isOrig):
     return arr
 
 def numpyToTensor(arr):
-    #convert to tensor (TODO)
-
-    #shuffle tensor
-    tensorList = torch.stack(arr)
-
-    index = torch.randperm(tensorList.shape[0])
-    tensorList = tensorList[index].view(tensorList.size()) 
+    #convert to tensor
+    arr = np.array(arr)
+    tensorList = torch.FloatTensor(arr)
 
     return tensorList
 
@@ -62,7 +55,8 @@ def createNewWaldoSamples(notWaldos, overlay):
     
     return newWaldos
         
-
+# Loading images datasets
+print("Loading dataset...")
 originalImg = loadDirectory("./original-images/*.jpg", True)
 
 waldo64 = loadDirectory("./64/waldo/*.jpg", False)
@@ -75,6 +69,7 @@ waldo256 = loadDirectory("./256/waldo/*.jpg", False)
 notWaldo256 = loadDirectory("./256/notwaldo/*.jpg", False)
 
 # Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
+print("Creating new Waldo samples...")
 waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
 waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
 waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
@@ -84,6 +79,7 @@ moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
 moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
 # Converting numpy arrays into tensors (TODO: FINISH CONVERSION FUNCTION)
+print("Converting numpy arrays into tensors...")
 waldo64Tensor = numpyToTensor(waldo64)
 waldo128Tensor = numpyToTensor(waldo128)
 waldo256Tensor = numpyToTensor(waldo256)
@@ -96,8 +92,6 @@ notWaldo64Tensor = numpyToTensor(notWaldo64)
 notWaldo128Tensor = numpyToTensor(notWaldo128)
 notWaldo256Tensor = numpyToTensor(notWaldo256)
 
-
-'''
 # Combining into two lists: waldos and not waldos
 waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
 notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
@@ -109,11 +103,12 @@ allWaldos = torch.cat((waldos, notWaldos), 0)
 waldoDataset = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
 print("Dataset loaded")
 
+'''
 # ============
 #   THE CNN
 # ============
 import torch.nn as nn
-import torch.nn.functional as F 
+import torch.nn.functional as F
 import torch.optim as optim
 
 # Network should output whether or not the input image has waldo in it
