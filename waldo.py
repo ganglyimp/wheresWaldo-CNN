@@ -1,57 +1,62 @@
 # ================
 #  PREPROCESSING
 # ================
-import cv2 
-import os
 import glob
-import torch
 import random
+import cv2
+import torch
 import numpy as np
-torch.set_default_tensor_type(torch.FloatTensor)
-
-print("Loading dataset...")
+import torchvision
+import torchvision.transforms as tf 
+from torchvision import datasets
+#torch.set_default_tensor_type(torch.FloatTensor)
 
 def loadDirectory(filepath, isOrig):
     # load directory
     files = glob.glob(filepath)
 
     arr = []
-    i = 0
     for fl in files:
         img = cv2.imread(fl)
 
         # resize image to 256x256
         if(isOrig != True and img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
-        
-        #holder = np.zeros(img.shape)
-        # indices = np.where(img[:,:,2] > 150)
-        # print(indices)
-        # img[indices] = 255
-        tenImg = torch.Tensor(img)
-        # # redfilter = (tenImg[:,:,2] > 130) & (tenImg[:,:,1] < 100) & (tenImg[:,:,0] < 110)
-        # # tenImg[:,:,0] = tenImg[:,:,0] * redfilter
-        # # tenImg[:,:,1] = tenImg[:,:,1] * redfilter
-        # # tenImg[:,:,2] = tenImg[:,:,2] * redfilter
-        # if i == 0:
-        #     tenImg[:,:,:] = tenImg[:,:,:]/255
-        #     cv2.imshow("IMAGE",tenImg.numpy())
-        #     cv2.waitKey(0)
-        #     i+=1
-        arr.append(tenImg)
-        print("reached")
-    # if dataset is original puzzles, return a list of tensors (images are not equal sizes)
-    if(isOrig):
-        return arr
-    
-    tensorList = torch.stack(arr)
 
-    # shuffle data
-    index = torch.randperm(tensorList.shape[0])
-    tensorList = tensorList[index].view(tensorList.size()) 
+        arr.append(img)
+
+    return arr
+
+def numpyToTensor(arr):
+    arr = np.array(arr)
+    arr = arr.transpose((0, 3, 1, 2))
+    tensorList = torch.FloatTensor(arr)
 
     return tensorList
 
+def createNewWaldoSamples(notWaldos, overlay):
+    newWaldos = []
+    oRows, oCols, oChannels = overlay.shape
+    for img in notWaldos:
+        newImg = img
+        iRows, iCols, iChannels = newImg.shape
+        newImg = np.dstack([newImg, np.ones((iRows, iCols), dtype='uint8') * 255])
+
+        randX = random.randint(0, iRows-oRows)
+        randY = random.randint(0, iCols-oCols)
+
+        aOverlay = overlay[:, :, 3] / 255.0
+        aImg = 1.0 - aOverlay
+
+        for c in range(0, 3):
+            newImg[randX:randX+oRows, randY:randY+oCols, c] = (aOverlay * overlay[:, :, c] + aImg * newImg[randX:randX+oRows, randY:randY+oCols, c])
+
+        newWaldos.append(newImg[:, :, :3])
+    
+    return newWaldos
+        
+# Loading images datasets
+print("Loading dataset...")
 originalImg = loadDirectory("./original-images/*.jpg", True)
 
 waldo64 = loadDirectory("./64/waldo/*.jpg", False)
@@ -63,12 +68,37 @@ notWaldo128 = loadDirectory("./128/notwaldo/*.jpg", False)
 waldo256 = loadDirectory("./256/waldo/*.jpg", False)
 notWaldo256 = loadDirectory("./256/notwaldo/*.jpg", False)
 
-# Combining into two lists: waldos and not waldos
-waldos = torch.cat((waldo64, waldo128, waldo256), 0)
-notWaldos = torch.cat((notWaldo64, notWaldo128, notWaldo256), 0)
+# Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
+print("Creating new Waldo samples...")
+waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
+waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
+waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
 
-# Issue: 97 Waldo : 6940 Not Waldo
-# Need to augment dataset to inflate Waldo instances
+moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
+moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
+moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
+
+# Converting numpy arrays into tensors
+print("Converting numpy arrays into tensors...")
+waldo64Tensor = numpyToTensor(waldo64)
+waldo128Tensor = numpyToTensor(waldo128)
+waldo256Tensor = numpyToTensor(waldo256)
+
+moreWaldo64Tensor = numpyToTensor(moreWaldo64)
+moreWaldo128Tensor = numpyToTensor(moreWaldo128)
+moreWaldo256Tensor = numpyToTensor(moreWaldo256)
+
+notWaldo64Tensor = numpyToTensor(notWaldo64)
+notWaldo128Tensor = numpyToTensor(notWaldo128)
+notWaldo256Tensor = numpyToTensor(notWaldo256)
+
+# Combining into two lists: waldos and not waldos
+waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
+notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
+
+# All values between 0 and 1
+waldos = waldos / 255.0
+notWaldos = notWaldos / 255.0
 
 # Create labels & combine
 waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
@@ -81,9 +111,7 @@ print("Dataset loaded")
 #   THE CNN
 # ============
 import torch.nn as nn
-import torch.nn.functional as F 
-import torchvision
-import torchvision.transforms as tf 
+import torch.nn.functional as F
 import torch.optim as optim
 
 # Network should output whether or not the input image has waldo in it
@@ -91,89 +119,47 @@ class WaldoFinder(nn.Module):
     def __init__(self):
         super(WaldoFinder, self).__init__()
 
-        C = 256 #in/out channels
-        K = 3 #kernel size
+        # Block 1
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=5, stride=1, padding=2)
+        self.batchNorm1 = nn.BatchNorm2d(num_features=256)
+        self.dropout1 = nn.Dropout2d(p=0.1)
 
-        # Convolutional Layers
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv3 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=2, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv6 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv7 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv8 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv9 = nn.Conv2d(in_channels=C, out_channels=C, kernel_size=K, stride=1, padding=1)
-        self.conv10 = nn.Conv2d(in_channels=C, out_channels=1, kernel_size=K, stride=1, padding=1)
+        # Block 2
+        self.conv2 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1)
+        self.batchNorm2 = nn.BatchNorm2d(num_features=128)
+        self.dropout2 = nn.Dropout2d(p=0.1)
 
-        # Scales weights by gain parameter
-        nn.init.xavier_uniform_(self.conv1.weight)
-        nn.init.xavier_uniform_(self.conv2.weight)
-        nn.init.xavier_uniform_(self.conv3.weight)
-        nn.init.xavier_uniform_(self.conv4.weight)
-        nn.init.xavier_uniform_(self.conv5.weight)
-        nn.init.xavier_uniform_(self.conv6.weight)
-        nn.init.xavier_uniform_(self.conv7.weight)
-        nn.init.xavier_uniform_(self.conv8.weight)
-        nn.init.xavier_uniform_(self.conv9.weight)
-        nn.init.xavier_uniform_(self.conv10.weight)
-    
-        # Batch Normalization
-        self.norm1 = nn.BatchNorm2d(C)
-        self.norm2 = nn.BatchNorm2d(C)
-        self.norm3 = nn.BatchNorm2d(C)
-        self.norm4 = nn.BatchNorm2d(C)
-        self.norm5 = nn.BatchNorm2d(C)
-        self.norm6 = nn.BatchNorm2d(C)
-        self.norm7 = nn.BatchNorm2d(C)
-        self.norm8 = nn.BatchNorm2d(C)
-        self.norm9 = nn.BatchNorm2d(C)
-        self.norm10 = nn.BatchNorm2d(C)
+        # Block 3
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.batchNorm3 = nn.BatchNorm2d(num_features=64)
+        self.dropout3 = nn.Dropout2d(p=0.1)
+
+        # Block 4
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=32, stride=1, padding=0)
+
+        self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
-        t = self.norm1(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm1(t)
+        t = F.relu(t)
+        t = self.dropout1(t)
+        t = self.maxPool(t)
 
         t = self.conv2(t)
-        t = self.norm2(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm2(t)
+        t = F.relu(t)
+        t = self.dropout2(t)
+        t = self.maxPool(t)
 
         t = self.conv3(t)
-        t = self.norm3(t)
-        t = F.Sigmoid(t)
+        t = self.batchNorm3(t)
+        t = F.relu(t)
+        t = self.dropout3(t)
+        t = self.maxPool(t)
 
         t = self.conv4(t)
-        t = self.norm4(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv5(t)
-        t = self.norm5(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv6(t)
-        t = self.norm6(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv7(t)
-        t = self.norm7(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv8(t)
-        t = self.norm8(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv9(t)
-        t = self.norm9(t)
-        t = F.Sigmoid(t)
-
-        t = self.conv10(t)
-        t = self.norm10(t)
-        t = F.Sigmoid(t)
-
-        # Round for binary output
-        t = round(t)
 
         return t
 
@@ -191,17 +177,21 @@ print("Dataset shuffled")
 
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
-lossFunc = nn.MSELoss()
+#lossFunc = nn.CrossEntropyLoss()
+lossFunc = nn.BCEWithLogitsLoss()
 
+i = 0
 print("Begining training...")
 for items, labels in trainLoader:
-    preds = waldoFinder(items)
+    optimizer.zero_grad()
+    preds = waldoFinder(items).squeeze()
 
     loss = lossFunc(preds, labels)
-    optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-    print("One loop completed")
+
+    print("Batch ", i, ": ", loss.item())
+    i += 1
 
 # Test Loop
 #correct = 0
