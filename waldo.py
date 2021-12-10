@@ -11,7 +11,7 @@ import torchvision.transforms as tf
 from torchvision import datasets
 #torch.set_default_tensor_type(torch.FloatTensor)
 
-def loadDirectory(filepath, isOrig):
+def loadDirectory(filepath):
     # load directory
     files = glob.glob(filepath)
 
@@ -20,7 +20,7 @@ def loadDirectory(filepath, isOrig):
         img = cv2.imread(fl)
 
         # resize image to 256x256
-        if(isOrig != True and img.shape[0] != 256): 
+        if(img.shape[0] != 256): 
             img = cv2.resize(img, (256, 256))
 
         arr.append(img)
@@ -54,57 +54,57 @@ def createNewWaldoSamples(notWaldos, overlay):
         newWaldos.append(newImg[:, :, :3])
     
     return newWaldos
-        
-# Loading images datasets
-print("Loading dataset...")
-originalImg = loadDirectory("./original-images/*.jpg", True)
 
-waldo64 = loadDirectory("./64/waldo/*.jpg", False)
-notWaldo64 = loadDirectory("./64/notwaldo/*.jpg", False)
+def createWaldoDataset():
+    print("Loading in Waldo images...")
+    # Loading images datasets
+    waldo64 = loadDirectory("./64/waldo/*.jpg")
+    waldo128 = loadDirectory("./128/waldo/*.jpg")
+    waldo256 = loadDirectory("./256/waldo/*.jpg")
 
-waldo128 = loadDirectory("./128/waldo/*.jpg", False)
-notWaldo128 = loadDirectory("./128/notwaldo/*.jpg", False)
+    notWaldo64 = loadDirectory("./64/notwaldo/*.jpg")
+    notWaldo128 = loadDirectory("./128/notwaldo/*.jpg")
+    notWaldo256 = loadDirectory("./256/notwaldo/*.jpg")
 
-waldo256 = loadDirectory("./256/waldo/*.jpg", False)
-notWaldo256 = loadDirectory("./256/notwaldo/*.jpg", False)
+    # Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
+    waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
+    waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
+    waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
 
-# Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
-print("Creating new Waldo samples...")
-waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
-waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
-waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
+    moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
+    moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
+    moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
-moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
-moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
-moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
+    # Converting numpy arrays into tensors
+    waldo64Tensor = numpyToTensor(waldo64)
+    waldo128Tensor = numpyToTensor(waldo128)
+    waldo256Tensor = numpyToTensor(waldo256)
 
-# Converting numpy arrays into tensors
-print("Converting numpy arrays into tensors...")
-waldo64Tensor = numpyToTensor(waldo64)
-waldo128Tensor = numpyToTensor(waldo128)
-waldo256Tensor = numpyToTensor(waldo256)
+    moreWaldo64Tensor = numpyToTensor(moreWaldo64)
+    moreWaldo128Tensor = numpyToTensor(moreWaldo128)
+    moreWaldo256Tensor = numpyToTensor(moreWaldo256)
 
-moreWaldo64Tensor = numpyToTensor(moreWaldo64)
-moreWaldo128Tensor = numpyToTensor(moreWaldo128)
-moreWaldo256Tensor = numpyToTensor(moreWaldo256)
+    notWaldo64Tensor = numpyToTensor(notWaldo64)
+    notWaldo128Tensor = numpyToTensor(notWaldo128)
+    notWaldo256Tensor = numpyToTensor(notWaldo256)
 
-notWaldo64Tensor = numpyToTensor(notWaldo64)
-notWaldo128Tensor = numpyToTensor(notWaldo128)
-notWaldo256Tensor = numpyToTensor(notWaldo256)
+    # Combining into one list
+    waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
+    notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
 
-# Combining into two lists: waldos and not waldos
-waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
-notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
+    # All values between 0 and 1
+    waldos = waldos / 255.0
+    notWaldos = notWaldos / 255.0
 
-# All values between 0 and 1
-waldos = waldos / 255.0
-notWaldos = notWaldos / 255.0
+    # Create labels & combine
+    waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
+    allWaldos = torch.cat((waldos, notWaldos), 0)
 
-# Create labels & combine
-waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
-allWaldos = torch.cat((waldos, notWaldos), 0)
+    waldoSet = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
 
-waldoDataset = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
+    return waldoSet
+
+waldoDataset = createWaldoDataset()
 print("Dataset loaded")
 
 # ============
@@ -177,11 +177,10 @@ print("Dataset shuffled")
 
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
-#lossFunc = nn.CrossEntropyLoss()
 lossFunc = nn.BCEWithLogitsLoss()
 
 i = 0
-print("Begining training...")
+print("Starting training loop...")
 for items, labels in trainLoader:
     optimizer.zero_grad()
     preds = waldoFinder(items).squeeze()
@@ -194,10 +193,46 @@ for items, labels in trainLoader:
     i += 1
 
 # Test Loop
-#correct = 0
-#for items, labels in testLoader:
-#    preds = waldoFinder(items)
-#    if preds == labels:
-#        correct = correct + 1
+print("Starting test loop...")
+truePositive = 0
+trueNegative = 0
+falsePositive = 0
+falseNegative = 0
+
+totalLoss = 0.0
+epochCount = 0
+for items, labels in testLoader:
+    preds = waldoFinder(items).squeeze()
+
+    loss = lossFunc(preds, labels)
+    totalLoss += loss.item()
+    epochCount += 1
+
+    preds = torch.round(preds)
+    
+    for i in range(len(labels)):
+        if(labels[i] == 1):
+            if(labels[i] == preds[i]):
+                truePositive += 1
+            else:
+                falseNegative += 1
+        else:
+            if(labels[i] == preds[i]):
+                trueNegative += 1
+            else:
+                falsePositive += 1
+
 
 # Output stats for AI
+print("True Positive: ", truePositive)
+print("True Negative: ", trueNegative)
+print("False Positive: ", falsePositive)
+print("False Negative: ", falseNegative)
+print()
+
+totalCorrect = truePositive + trueNegative
+totalIncorrect = falsePositive + falseNegative
+meanLoss = totalLoss / epochCount
+print("Total Correct: ", totalCorrect)
+print("Total Incorrect: ", totalIncorrect)
+print("Average Loss: ", meanLoss)
