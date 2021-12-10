@@ -186,7 +186,7 @@ for items, labels in trainLoader:
     optimizer.zero_grad()
     preds = waldoFinder(items).squeeze()
 
-    loss = lossFunc(preds, labels.unsqueeze(dim=0))
+    loss = lossFunc(preds, labels)
     loss.backward()
     optimizer.step()
 
