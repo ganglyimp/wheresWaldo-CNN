@@ -58,41 +58,74 @@ def createNewWaldoSamples(notWaldos, overlay):
     return newWaldos
 
 def createWaldoDataset():
+    # Note: WaldoOverlay is a png that will be overlayed on top of notWaldo samples in order to generate more Waldo samples
+
     print("Loading in Waldo images...")
-    # Loading images datasets
+    # Loading in 64x64 images
     waldo64 = loadDirectory("./64/waldo/*.jpg")
-    waldo128 = loadDirectory("./128/waldo/*.jpg")
-    waldo256 = loadDirectory("./256/waldo/*.jpg")
-
     notWaldo64 = loadDirectory("./64/notwaldo/*.jpg")
-    notWaldo128 = loadDirectory("./128/notwaldo/*.jpg")
-    notWaldo256 = loadDirectory("./256/notwaldo/*.jpg")
-
-    # Creating new Waldo samples by overlaying a Waldo png over a notWaldo sample
     waldoOverlay64 = cv2.imread('./waldo64.png', cv2.IMREAD_UNCHANGED)
-    waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
-    waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
-
     moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
+
+    # Converting 64x64 images into tensors
+    waldo64Tensor = numpyToTensor(waldo64)
+    moreWaldo64Tensor = numpyToTensor(moreWaldo64)
+    notWaldo64Tensor = numpyToTensor(notWaldo64)
+
+    # Free up memory
+    del waldo64
+    del notWaldo64
+    del waldoOverlay64
+    del moreWaldo64
+
+    # Loading in 128x128 images
+    waldo128 = loadDirectory("./128/waldo/*.jpg")
+    notWaldo128 = loadDirectory("./128/notwaldo/*.jpg")
+    waldoOverlay128 = cv2.imread('./waldo128.png', cv2.IMREAD_UNCHANGED)
     moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
+
+    # Converting 128x128 images into tensors
+    waldo128Tensor = numpyToTensor(waldo128)
+    moreWaldo128Tensor = numpyToTensor(moreWaldo128)
+    notWaldo128Tensor = numpyToTensor(notWaldo128)
+
+    # Freeing up memory
+    del waldo128
+    del notWaldo128
+    del waldoOverlay128
+    del moreWaldo128
+
+    # Loading in 256x256 images
+    waldo256 = loadDirectory("./256/waldo/*.jpg")
+    notWaldo256 = loadDirectory("./256/notwaldo/*.jpg")
+    waldoOverlay256 = cv2.imread('./waldo256.png', cv2.IMREAD_UNCHANGED)
     moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
-    # Converting numpy arrays into tensors
-    waldo64Tensor = numpyToTensor(waldo64)
-    waldo128Tensor = numpyToTensor(waldo128)
+    # Converting 256x256 images into tensors
     waldo256Tensor = numpyToTensor(waldo256)
-
-    moreWaldo64Tensor = numpyToTensor(moreWaldo64)
-    moreWaldo128Tensor = numpyToTensor(moreWaldo128)
     moreWaldo256Tensor = numpyToTensor(moreWaldo256)
-
-    notWaldo64Tensor = numpyToTensor(notWaldo64)
-    notWaldo128Tensor = numpyToTensor(notWaldo128)
     notWaldo256Tensor = numpyToTensor(notWaldo256)
+
+    # Freeing up memory
+    del waldo256
+    del notWaldo256
+    del waldoOverlay256
+    del moreWaldo256
 
     # Combining into one list
     waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
     notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
+
+    # Freeing up ALL that memory
+    del waldo64Tensor
+    del waldo128Tensor
+    del waldo256Tensor
+    del moreWaldo64Tensor
+    del moreWaldo128Tensor
+    del moreWaldo256Tensor
+    del notWaldo64Tensor
+    del notWaldo128Tensor
+    del notWaldo256Tensor
 
     # All values between 0 and 1
     waldos = waldos / 255.0
@@ -107,7 +140,7 @@ def createWaldoDataset():
     return waldoSet
 
 waldoDataset = createWaldoDataset()
-print("Dataset loaded")
+print("Dataset loaded.")
 
 # ============
 #   THE CNN
