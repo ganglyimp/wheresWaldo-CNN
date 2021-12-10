@@ -11,7 +11,7 @@ import torchvision.transforms as tf
 from torchvision import datasets
 #torch.set_default_tensor_type(torch.FloatTensor)
 
-device = torch.device("cudo:0")
+device = torch.device("cuda:0")
 
 def loadDirectory(filepath):
     # load directory
