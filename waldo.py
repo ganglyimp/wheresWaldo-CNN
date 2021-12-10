@@ -78,7 +78,7 @@ moreWaldo64 = createNewWaldoSamples(notWaldo64, waldoOverlay64)
 moreWaldo128 = createNewWaldoSamples(notWaldo128, waldoOverlay128)
 moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
-# Converting numpy arrays into tensors (TODO: FINISH CONVERSION FUNCTION)
+# Converting numpy arrays into tensors
 print("Converting numpy arrays into tensors...")
 waldo64Tensor = numpyToTensor(waldo64)
 waldo128Tensor = numpyToTensor(waldo128)
@@ -95,6 +95,10 @@ notWaldo256Tensor = numpyToTensor(notWaldo256)
 # Combining into two lists: waldos and not waldos
 waldos = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor, moreWaldo64Tensor, moreWaldo128Tensor, moreWaldo256Tensor), 0)
 notWaldos = torch.cat((notWaldo64Tensor, notWaldo128Tensor, notWaldo256Tensor), 0)
+
+# All values between 0 and 1
+waldos = waldos / 255.0
+notWaldos = notWaldos / 255.0
 
 # Create labels & combine
 waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
@@ -137,15 +141,11 @@ class WaldoFinder(nn.Module):
 
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
-        print("Initial: ", t.shape)
-
         t = self.conv1(t)
         t = self.batchNorm1(t)
         t = F.relu(t)
         t = self.dropout1(t)
         t = self.maxPool(t)
-
-        print("Block 1: ", t.shape)
 
         t = self.conv2(t)
         t = self.batchNorm2(t)
@@ -153,21 +153,13 @@ class WaldoFinder(nn.Module):
         t = self.dropout2(t)
         t = self.maxPool(t)
 
-        print("Block 2: ", t.shape)
-
         t = self.conv3(t)
         t = self.batchNorm3(t)
         t = F.relu(t)
         t = self.dropout3(t)
         t = self.maxPool(t)
 
-        print("Block 3: ", t.shape)
-
         t = self.conv4(t)
-
-        print("Final Layer: ", t.shape)
-
-        t = torch.round(t)
 
         return t
 
@@ -186,17 +178,20 @@ print("Dataset shuffled")
 # Train Loop
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 #lossFunc = nn.CrossEntropyLoss()
-lossFunc = nn.BCELoss()
+lossFunc = nn.BCEWithLogitsLoss()
 
+i = 0
 print("Begining training...")
 for items, labels in trainLoader:
     optimizer.zero_grad()
-    preds = waldoFinder(items).unsqueeze(dim=0)
+    preds = waldoFinder(items).squeeze()
 
     loss = lossFunc(preds, labels.unsqueeze(dim=0))
     loss.backward()
     optimizer.step()
-    print("One loop completed")
+
+    print("Batch ", i, ": ", loss.item())
+    i += 1
 
 # Test Loop
 #correct = 0
