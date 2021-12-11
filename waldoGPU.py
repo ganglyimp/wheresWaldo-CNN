@@ -177,6 +177,11 @@ class WaldoFinder(nn.Module):
 
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
+        nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.xavier_uniform_(self.conv3.weight)
+        nn.init.xavier_uniform_(self.conv4.weight)
+
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
