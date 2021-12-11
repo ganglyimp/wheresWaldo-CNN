@@ -273,3 +273,5 @@ meanLoss = totalLoss / epochCount
 print("Total Correct: ", totalCorrect)
 print("Total Incorrect: ", totalIncorrect)
 print("Average Loss: ", meanLoss)
+
+torch.save(waldoFinder.state_dict(), "waldoWeights.pth")
