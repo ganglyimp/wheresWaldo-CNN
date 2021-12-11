@@ -184,19 +184,19 @@ class WaldoFinder(nn.Module):
     def forward(self, t):
         t = self.conv1(t)
         t = self.batchNorm1(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout1(t)
         t = self.maxPool(t)
 
         t = self.conv2(t)
         t = self.batchNorm2(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout2(t)
         t = self.maxPool(t)
 
         t = self.conv3(t)
         t = self.batchNorm3(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout3(t)
         t = self.maxPool(t)
 
