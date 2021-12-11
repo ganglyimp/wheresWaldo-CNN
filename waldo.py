@@ -9,7 +9,6 @@ import numpy as np
 import torchvision
 import torchvision.transforms as tf 
 from torchvision import datasets
-#torch.set_default_tensor_type(torch.FloatTensor)
 
 def loadDirectory(filepath):
     # load directory
@@ -238,6 +237,8 @@ falseNegative = 0
 
 totalLoss = 0.0
 epochCount = 0
+
+waldoFinder.eval()
 for items, labels in testLoader:
     preds = waldoFinder(items).squeeze()
 
