@@ -160,21 +160,26 @@ class WaldoFinder(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=5, stride=1, padding=2)
         self.batchNorm1 = nn.BatchNorm2d(num_features=256)
         self.dropout1 = nn.Dropout2d(p=0.1)
-
+        nn.init.xavier_uniform_(self.conv1.weight)
+        
         # Block 2
         self.conv2 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1)
         self.batchNorm2 = nn.BatchNorm2d(num_features=128)
         self.dropout2 = nn.Dropout2d(p=0.1)
-
+        nn.init.xavier_uniform_(self.conv2.weight)
+        
         # Block 3
         self.conv3 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1)
         self.batchNorm3 = nn.BatchNorm2d(num_features=64)
         self.dropout3 = nn.Dropout2d(p=0.1)
+        nn.init.xavier_uniform_(self.conv3.weight)
 
         # Block 4
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=32, stride=1, padding=0)
+        nn.init.xavier_uniform_(self.conv4.weight)
 
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
+
 
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
