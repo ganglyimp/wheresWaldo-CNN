@@ -44,8 +44,8 @@ def createNewWaldoSamples(notWaldos, overlay):
         iRows, iCols, iChannels = newImg.shape
         newImg = np.dstack([newImg, np.ones((iRows, iCols), dtype='uint8') * 255])
 
-        randX = random.randint(0, iRows-int(oRows / 2))
-        randY = random.randint(0, iCols-int(oCols / 2))
+        randX = random.randint(0, iRows-oRows)
+        randY = random.randint(0, iCols-oCols)
 
         aOverlay = overlay[:, :, 3] / 255.0
         aImg = 1.0 - aOverlay
