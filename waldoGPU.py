@@ -250,7 +250,7 @@ for items, labels in testLoader:
     totalLoss += loss.item()
     epochCount += 1
 
-    preds = torch.round(preds)
+    preds = F.sigmoid(preds)
     
     for i in range(len(labels)):
         if(labels[i] == 1):
