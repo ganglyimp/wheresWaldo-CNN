@@ -90,9 +90,25 @@ class WaldoFinder(nn.Module):
 # Figure out a way to draw a square around where Waldo is likely to be. 
 
 def solveTheWaldo(thePuzzle):
-    puzzleTensor = numpyToTensor(thePuzzle)
+    # Divide an image into equal sized tiles 
+    height = thePuzzle.shape[0]
+    width = thePuzzle.shape[1]
 
-    # Divide an image into equal sized tiles. 
+    numRows = int(np.ceil(height / 256.0))
+    numCols = int(np.ceil(width / 256.0))
+
+    thePuzzle = cv2.resize(thePuzzle, (256*numRows, 256*numCols))
+
+    for y in range(0, height, 256):
+        for x in range(0, width, 256):
+            square = thePuzzle[y:y+256, x:x+256]
+            cv2.imshow("A square", square)
+    
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    
+
     # Resize tiles to 256x256
     # Run tiles through CNN
     # Find tile with highest probability of containing waldo.
