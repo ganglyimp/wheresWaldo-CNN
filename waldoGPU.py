@@ -34,7 +34,7 @@ def numpyToTensor(arr):
     arr = arr.transpose((0, 3, 1, 2))
     tensorList = torch.FloatTensor(arr)
 
-    return tensorList.to(device)
+    return tensorList
 
 def createNewWaldoSamples(notWaldos, overlay):
     newWaldos = []
@@ -139,7 +139,7 @@ def createWaldoDataset():
 
     return waldoSet
 
-waldoDataset = createWaldoDataset()
+waldoDataset = createWaldoDataset().to(device)
 print("Dataset loaded.")
 
 # ============
