@@ -218,7 +218,6 @@ print("Dataset shuffled")
 optimizer = optim.Adam(waldoFinder.parameters(), lr=.01)
 lossFunc = nn.BCEWithLogitsLoss()
 
-i = 0
 print("Starting training loop...")
 for items, labels in trainLoader:
     optimizer.zero_grad()
@@ -227,9 +226,6 @@ for items, labels in trainLoader:
     loss = lossFunc(preds, labels)
     loss.backward()
     optimizer.step()
-
-    print("Batch ", i, ": ", loss.item())
-    i += 1
 
 # Test Loop
 print("Starting test loop...")
