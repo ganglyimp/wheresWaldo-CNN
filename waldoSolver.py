@@ -69,19 +69,19 @@ class WaldoFinder(nn.Module):
     def forward(self, t):
         t = self.conv1(t)
         t = self.batchNorm1(t)
-        t = F.sigmoid(t)
+        t = torch.sigmoid(t)
         t = self.dropout1(t)
         t = self.maxPool(t)
 
         t = self.conv2(t)
         t = self.batchNorm2(t)
-        t = F.sigmoid(t)
+        t = torch.sigmoid(t)
         t = self.dropout2(t)
         t = self.maxPool(t)
 
         t = self.conv3(t)
         t = self.batchNorm3(t)
-        t = F.sigmoid(t)
+        t = torch.sigmoid(t)
         t = self.dropout3(t)
         t = self.maxPool(t)
 
@@ -120,7 +120,11 @@ def solveTheWaldo(thePuzzle):
 
     # Running tiles through network
     preds = waldoFinder(tileTensors).squeeze()
-    print(preds)
+    maxIndex = np.argmax(preds.detach().numpy())
+    
+    cv2.imshow("Here's Waldo Maybe", tileList[maxIndex])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # Resize tiles to 256x256
     # Run tiles through CNN
