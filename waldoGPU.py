@@ -135,11 +135,14 @@ def createWaldoDataset():
     waldoLabels = torch.cat((torch.ones(len(waldos)), torch.zeros(len(notWaldos))), 0)
     allWaldos = torch.cat((waldos, notWaldos), 0)
 
+    waldoLabels = waldoLabels.to(device)
+    allWaldos = allWaldos.to(device)
+
     waldoSet = torch.utils.data.TensorDataset(allWaldos, waldoLabels)
 
     return waldoSet
 
-waldoDataset = createWaldoDataset().to(device)
+waldoDataset = createWaldoDataset()
 print("Dataset loaded.")
 
 # ============
