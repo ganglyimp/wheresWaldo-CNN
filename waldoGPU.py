@@ -34,7 +34,7 @@ def numpyToTensor(arr):
     arr = arr.transpose((0, 3, 1, 2))
     tensorList = torch.FloatTensor(arr)
 
-    return tensorList
+    return tensorList.to(device)
 
 def createNewWaldoSamples(notWaldos, overlay):
     newWaldos = []
@@ -102,9 +102,9 @@ def createWaldoDataset():
     moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
     # Converting 256x256 images into tensors
-    waldo256Tensor = numpyToTensor(waldo256).to(device)
-    moreWaldo256Tensor = numpyToTensor(moreWaldo256).to(device)
-    notWaldo256Tensor = numpyToTensor(notWaldo256).to(device)
+    waldo256Tensor = numpyToTensor(waldo256)
+    moreWaldo256Tensor = numpyToTensor(moreWaldo256)
+    notWaldo256Tensor = numpyToTensor(notWaldo256)
 
     # Freeing up memory
     del waldo256
