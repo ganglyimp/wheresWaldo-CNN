@@ -22,7 +22,7 @@ def loadDirectory(filepath):
 
 def numpyToTensor(arr):
     arr = np.array(arr)
-    arr = arr.transpose((2, 0, 1))
+    arr = arr.transpose((0, 3, 1, 2))
     tensorList = torch.FloatTensor(arr)
     tensorList = tensorList / 255.0
 
@@ -60,23 +60,28 @@ class WaldoFinder(nn.Module):
 
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
+        nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.xavier_uniform_(self.conv3.weight)
+        nn.init.xavier_uniform_(self.conv4.weight)
+
     #Forward function - convolvs down to 16x16 image and ultimately outputs 1 or 0
     def forward(self, t):
         t = self.conv1(t)
         t = self.batchNorm1(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout1(t)
         t = self.maxPool(t)
 
         t = self.conv2(t)
         t = self.batchNorm2(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout2(t)
         t = self.maxPool(t)
 
         t = self.conv3(t)
         t = self.batchNorm3(t)
-        t = F.relu(t)
+        t = F.sigmoid(t)
         t = self.dropout3(t)
         t = self.maxPool(t)
 
@@ -97,17 +102,25 @@ def solveTheWaldo(thePuzzle):
     numRows = int(np.ceil(height / 256.0))
     numCols = int(np.ceil(width / 256.0))
 
+    # Resizing so that image is a multiple of 256
     thePuzzle = cv2.resize(thePuzzle, (256*numRows, 256*numCols))
 
-    for y in range(0, height, 256):
-        for x in range(0, width, 256):
-            square = thePuzzle[y:y+256, x:x+256]
-            cv2.imshow("A square", square)
-    
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # Split image into 256x256 tiles
+    tileList = []
+    for y in range(0, thePuzzle.shape[0], 256):
+        for x in range(0, thePuzzle.shape[1], 256):
+            if(y >= thePuzzle.shape[0] or x >= thePuzzle.shape[1]):
+                continue
 
+            square = thePuzzle[y:y+256, x:x+256, :]
+            tileList.append(square)
     
+    # Converting image tiles into tensors
+    tileTensors = numpyToTensor(tileList)
+
+    # Running tiles through network
+    preds = waldoFinder(tileTensors).squeeze()
+    print(preds)
 
     # Resize tiles to 256x256
     # Run tiles through CNN
