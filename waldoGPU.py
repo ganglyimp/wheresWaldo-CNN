@@ -102,9 +102,9 @@ def createWaldoDataset():
     moreWaldo256 = createNewWaldoSamples(notWaldo256, waldoOverlay256)
 
     # Converting 256x256 images into tensors
-    waldo256Tensor = numpyToTensor(waldo256)
-    moreWaldo256Tensor = numpyToTensor(moreWaldo256)
-    notWaldo256Tensor = numpyToTensor(notWaldo256)
+    waldo256Tensor = numpyToTensor(waldo256).to(device)
+    moreWaldo256Tensor = numpyToTensor(moreWaldo256).to(device)
+    notWaldo256Tensor = numpyToTensor(notWaldo256).to(device)
 
     # Freeing up memory
     del waldo256
@@ -155,22 +155,22 @@ class WaldoFinder(nn.Module):
         super(WaldoFinder, self).__init__()
 
         # Block 1
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=5, stride=1, padding=2).cuda()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=256, kernel_size=5, stride=1, padding=2)
         self.batchNorm1 = nn.BatchNorm2d(num_features=256)
         self.dropout1 = nn.Dropout2d(p=0.1)
 
         # Block 2
-        self.conv2 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1).cuda()
+        self.conv2 = nn.Conv2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1)
         self.batchNorm2 = nn.BatchNorm2d(num_features=128)
         self.dropout2 = nn.Dropout2d(p=0.1)
 
         # Block 3
-        self.conv3 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1).cuda()
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1)
         self.batchNorm3 = nn.BatchNorm2d(num_features=64)
         self.dropout3 = nn.Dropout2d(p=0.1)
 
         # Block 4
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=32, stride=1, padding=0).cuda()
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=32, stride=1, padding=0)
 
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
 
