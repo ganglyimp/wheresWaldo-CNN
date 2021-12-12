@@ -253,28 +253,31 @@ for items, labels in testLoader:
     preds = torch.round(F.sigmoid(preds))
     
     for i in range(len(labels)):
+        if(i==0):
+            filename = ''
+            currImage = item[i].cpu().detach().numpy()
+
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
                 truePositive += 1
                 if(i==0):
-                    filename= "./waldoGuesses/" + str(i) + "_TP.jpg"
-                    cv2.imwrite(filename, items[i].detach().numpy())
+                    filename = "./waldoGuesses/" + str(i) + "_TP.jpg"
             else:
                 falseNegative += 1
                 if(i==0):
-                    filename= "./notWaldoGuesses/" + str(i) + "_FN.jpg"
-                    cv2.imwrite(filename, items[i].detach().numpy())
+                    filename = "./notWaldoGuesses/" + str(i) + "_FN.jpg"
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
                 if(i==0):
-                    filename= "./waldoGuesses/" + str(i) + "_TN.jpg"
-                    cv2.imwrite(filename, items[i].detach().numpy())
+                    filename = "./waldoGuesses/" + str(i) + "_TN.jpg"
             else:
                 falsePositive += 1
                 if(i==0):
-                    filename= "./notWaldoGuesses/" + str(i) + "_FP.jpg"
-                    cv2.imwrite(filename, items[i].detach().numpy())
+                    filename = "./notWaldoGuesses/" + str(i) + "_FP.jpg"
+        
+        if(i==0):
+            cv2.imwrite(filename, currImage)
 
 
 # Output stats for AI
