@@ -274,7 +274,7 @@ for items, labels in testLoader:
                 falsePositive += 1
                 if(i==0):
                     filename= "./notWaldoGuesses/" + str(i) + "_FP.jpg"
-                    cv2.imwrite(filename, items[i])
+                    cv2.imwrite(filename, items[i].detach().numpy())
 
 
 # Output stats for AI
