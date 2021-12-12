@@ -99,28 +99,33 @@ def solveTheWaldo(thePuzzle):
     height = thePuzzle.shape[0]
     width = thePuzzle.shape[1]
 
-    numRows = int(np.ceil(height / 256.0))
-    numCols = int(np.ceil(width / 256.0))
+    numRows = int(np.ceil(height / 64.0))
+    numCols = int(np.ceil(width / 64.0))
 
-    # Resizing so that image is a multiple of 256
-    thePuzzle = cv2.resize(thePuzzle, (256*numRows, 256*numCols))
+    # Resizing so that image is a multiple of 64
+    thePuzzle = cv2.resize(thePuzzle, (64*numRows, 64*numCols))
 
-    # Split image into 256x256 tiles
+    # Split image into 64x64 tiles
+    print("\tSplitting image into smaller tile...")
     tileList = []
-    for y in range(0, thePuzzle.shape[0], 256):
-        for x in range(0, thePuzzle.shape[1], 256):
+    for y in range(0, thePuzzle.shape[0], 64):
+        for x in range(0, thePuzzle.shape[1], 64):
             if(y >= thePuzzle.shape[0] or x >= thePuzzle.shape[1]):
                 continue
 
-            square = thePuzzle[y:y+256, x:x+256, :]
+            square = thePuzzle[y:y+64, x:x+64, :]
+            square = cv2.resize(square, (256, 256))
             tileList.append(square)
     
     # Converting image tiles into tensors
     tileTensors = numpyToTensor(tileList)
 
     # Running tiles through network
-    preds = waldoFinder(tileTensors).squeeze()
-    maxIndex = np.argmax(preds.detach().numpy())
+    print("\tRunning tiles through network...")
+    maxIndex = 0
+    for i in range(0, tileTensors.shape[0]-10, 10):
+        preds = waldoFinder(tileTensors[i:i+10]).squeeze()
+        maxIndex = np.argmax(preds.detach().numpy())
     
     cv2.imshow("Here's Waldo Maybe", tileList[maxIndex])
     cv2.waitKey(0)
