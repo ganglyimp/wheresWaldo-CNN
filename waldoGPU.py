@@ -149,7 +149,7 @@ def originalWaldosOnly():
 
     waldo64Tensor = numpyToTensor(waldo64)
     waldo128Tensor = numpyToTensor(waldo128)
-    waldo256Tensor = numtoToTensor(waldo256)
+    waldo256Tensor = numToTensor(waldo256)
 
     del waldo64
     del waldo128
