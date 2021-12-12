@@ -256,23 +256,23 @@ for items, labels in testLoader:
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
                 truePositive += 1
-                if(i==len(labels)):
+                if(i==0):
                     filename= "./waldoGuesses/" + str(i) + "_TP.jpg"
                     cv2.imwrite(filename, items[i])
             else:
                 falseNegative += 1
-                if(i==len(labels)):
+                if(i==0):
                     filename= "./notWaldoGuesses/" + str(i) + "_FN.jpg"
                     cv2.imwrite(filename, items[i])
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
-                if(i==len(labels)):
+                if(i==0):
                     filename= "./waldoGuesses/" + str(i) + "_TN.jpg"
                     cv2.imwrite(filename, items[i])
             else:
                 falsePositive += 1
-                if(i==len(labels)):
+                if(i==0):
                     filename= "./notWaldoGuesses/" + str(i) + "_FP.jpg"
                     cv2.imwrite(filename, items[i])
 
