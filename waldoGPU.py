@@ -255,7 +255,7 @@ for items, labels in testLoader:
     for i in range(len(labels)):
         if(i==0):
             filename = ''
-            currImage = items[i].cpu().detach().numpy()
+            currImage = items[i].cpu().detach().numpy() * 255
             currImage = currImage.transpose((1, 2, 0))
 
         if(labels[i] == 1):
