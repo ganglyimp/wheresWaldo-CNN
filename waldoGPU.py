@@ -258,18 +258,18 @@ for items, labels in testLoader:
                 truePositive += 1
                 if(i==0):
                     filename= "./waldoGuesses/" + str(i) + "_TP.jpg"
-                    cv2.imwrite(filename, items[i])
+                    cv2.imwrite(filename, items[i].detach().numpy())
             else:
                 falseNegative += 1
                 if(i==0):
                     filename= "./notWaldoGuesses/" + str(i) + "_FN.jpg"
-                    cv2.imwrite(filename, items[i])
+                    cv2.imwrite(filename, items[i].detach().numpy())
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
                 if(i==0):
                     filename= "./waldoGuesses/" + str(i) + "_TN.jpg"
-                    cv2.imwrite(filename, items[i])
+                    cv2.imwrite(filename, items[i].detach().numpy())
             else:
                 falsePositive += 1
                 if(i==0):
