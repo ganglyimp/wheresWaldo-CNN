@@ -243,6 +243,7 @@ totalLoss = 0.0
 epochCount = 0
 
 waldoFinder.eval()
+imgCount = 0
 for items, labels in testLoader:
     preds = waldoFinder(items).squeeze()
 
@@ -253,32 +254,27 @@ for items, labels in testLoader:
     preds = torch.round(F.sigmoid(preds))
     
     for i in range(len(labels)):
-        if(i==0):
-            filename = ''
-            currImage = items[i].cpu().detach().numpy() * 255
-            currImage = currImage.transpose((1, 2, 0))
+        filename = ''
+        currImage = items[i].cpu().detach().numpy() * 255
+        currImage = currImage.transpose((1, 2, 0))
 
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
                 truePositive += 1
-                if(i==0):
-                    filename = "./waldoGuesses/" + str(i) + "_TP.jpg"
+                filename = "./waldoGuesses/" + str(imgCount) + "_TP.jpg"
             else:
                 falseNegative += 1
-                if(i==0):
-                    filename = "./notWaldoGuesses/" + str(i) + "_FN.jpg"
+                filename = "./notWaldoGuesses/" + str(imgCount) + "_FN.jpg"
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
-                if(i==0):
-                    filename = "./waldoGuesses/" + str(i) + "_TN.jpg"
+                filename = "./waldoGuesses/" + str(imgCount) + "_TN.jpg"
             else:
                 falsePositive += 1
-                if(i==0):
-                    filename = "./notWaldoGuesses/" + str(i) + "_FP.jpg"
+                filename = "./notWaldoGuesses/" + str(imgCount) + "_FP.jpg"
         
-        if(i==0):
-            cv2.imwrite(filename, currImage)
+        cv2.imwrite(filename, currImage)
+        imgCount += 1
 
 
 # Output stats for AI
