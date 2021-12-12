@@ -161,7 +161,12 @@ def originalWaldosOnly():
     del waldo128Tensor
     del waldo256Tensor
 
-    waldoLabels = torch.ones(len(waldoList)).to(device)
+    waldoList = waldoList / 255.0
+
+    waldoLabels = torch.ones(len(waldoList))
+
+    waldoList = waldoList.to(device)
+    waldoLabels = waldoLabels.to(device)
 
     waldoSet = torch.utils.data.TensorDataset(waldoList, waldoLabels)
 
