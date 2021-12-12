@@ -142,7 +142,33 @@ def createWaldoDataset():
 
     return waldoSet
 
+def originalWaldosOnly():
+    waldo64 = loadDirectory("./64/waldo/*.jpg")
+    waldo128 = loadDirectory("./128/waldo/*.jpg")
+    waldo256 = loadDirectory("./256/waldo/*.jpg")
+
+    waldo64Tensor = numpyToTensor(waldo64)
+    waldo128Tensor = numpyToTensor(waldo128)
+    waldo256Tensor = numtoToTensor(waldo256)
+
+    del waldo64
+    del waldo128
+    del waldo256
+
+    waldoList = torch.cat((waldo64Tensor, waldo128Tensor, waldo256Tensor), 0)
+
+    del waldo64Tensor
+    del waldo128Tensor
+    del waldo256Tensor
+
+    waldoLabels = torch.ones(len(waldoList)).to(device)
+
+    waldoSet = torch.utils.data.TensorDataset(waldoList, waldoLabels)
+
+    return waldoSet
+
 waldoDataset = createWaldoDataset()
+origWaldoSet = originalWaldosOnly()
 print("Dataset loaded.")
 
 # ============
@@ -243,7 +269,7 @@ totalLoss = 0.0
 epochCount = 0
 
 waldoFinder.eval()
-imgCount = 0
+#imgCount = 0
 for items, labels in testLoader:
     preds = waldoFinder(items).squeeze()
 
@@ -254,30 +280,65 @@ for items, labels in testLoader:
     preds = torch.round(F.sigmoid(preds))
     
     for i in range(len(labels)):
+        '''
         filename = ''
         currImage = items[i].cpu().detach().numpy() * 255
         currImage = currImage.transpose((1, 2, 0))
+        '''
 
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
                 truePositive += 1
-                filename = "./guesses_correct/" + str(imgCount) + "_TP.jpg"
+                #filename = "./guesses_correct/" + str(imgCount) + "_TP.jpg"
             else:
                 falseNegative += 1
-                filename = "./guesses_incorrect/" + str(imgCount) + "_FN.jpg"
+                #filename = "./guesses_incorrect/" + str(imgCount) + "_FN.jpg"
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
-                filename = "./guesses_correct/" + str(imgCount) + "_TN.jpg"
+                #filename = "./guesses_correct/" + str(imgCount) + "_TN.jpg"
             else:
                 falsePositive += 1
-                filename = "./guesses_incorrect/" + str(imgCount) + "_FP.jpg"
+                #filename = "./guesses_incorrect/" + str(imgCount) + "_FP.jpg"
         
-        cv2.imwrite(filename, currImage)
-        imgCount += 1
+        #cv2.imwrite(filename, currImage)
+        #imgCount += 1
+
+# Testing on exclusively Waldo images
+waldoLoader = torch.utils.data.DataLoader(origWaldoSet, shuffle=True, batch_size=10)
+
+waldoLoss = 0
+waldoEpochs = 0
+waldoTP = 0
+waldoTN = 0
+waldoFP = 0
+waldoFN = 0
+
+for items, labels in waldoLoader:
+    preds = waldoFinder(items).squeeze()
+
+    loss = lossFunc(preds, labels)
+    waldoLoss += loss.item()
+    waldoEpochs += 1
+
+    preds = torch.round(F.sigmoid(preds))
+
+    for i in range(len(labels)):
+
+        if(labels[i] == 1):
+            if(labels[i] == preds[i]):
+                waldoTP += 1
+            else:
+                waldoFN += 1
+        else:
+            if(labels[i] == preds[i]):
+                waldoTN += 1
+            else:
+                waldoFP += 1
 
 
 # Output stats for AI
+print("GENERAL TEST RESULTS:")
 print("True Positive: ", truePositive)
 print("True Negative: ", trueNegative)
 print("False Positive: ", falsePositive)
@@ -290,5 +351,23 @@ meanLoss = totalLoss / epochCount
 print("Total Correct: ", totalCorrect)
 print("Total Incorrect: ", totalIncorrect)
 print("Average Loss: ", meanLoss)
+print()
+print()
+
+print("ORIGINAL WALDOS ONLY TEST RESULTS:")
+print("True Positive: ", waldoTP)
+print("True Negative: ", waldoTN)
+print("False Positive: ", waldoFP)
+print("False Negative: ", waldoFN)
+print()
+
+totalCorrect = waldoTP + waldoTN
+totalIncorrect = waldoFP + waldoFN
+meanLoss = waldoLoss / waldoEpochs
+print("Total Correct: ", totalCorrect)
+print("Total Incorrect: ", totalIncorrect)
+print("Average Loss: ", meanLoss)
+print()
+print()
 
 torch.save(waldoFinder.state_dict(), "waldoWeights.pth")
