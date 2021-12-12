@@ -261,17 +261,17 @@ for items, labels in testLoader:
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
                 truePositive += 1
-                filename = "./waldoGuesses/" + str(imgCount) + "_TP.jpg"
+                filename = "./guesses_correct/" + str(imgCount) + "_TP.jpg"
             else:
                 falseNegative += 1
-                filename = "./notWaldoGuesses/" + str(imgCount) + "_FN.jpg"
+                filename = "./guesses_incorrect/" + str(imgCount) + "_FN.jpg"
         else:
             if(labels[i] == preds[i]):
                 trueNegative += 1
-                filename = "./waldoGuesses/" + str(imgCount) + "_TN.jpg"
+                filename = "./guesses_correct/" + str(imgCount) + "_TN.jpg"
             else:
                 falsePositive += 1
-                filename = "./notWaldoGuesses/" + str(imgCount) + "_FP.jpg"
+                filename = "./guesses_incorrect/" + str(imgCount) + "_FP.jpg"
         
         cv2.imwrite(filename, currImage)
         imgCount += 1
