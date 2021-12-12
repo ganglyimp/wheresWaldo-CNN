@@ -256,6 +256,7 @@ for items, labels in testLoader:
         if(i==0):
             filename = ''
             currImage = items[i].cpu().detach().numpy()
+            currImage = currImage.transpose((1, 2, 0))
 
         if(labels[i] == 1):
             if(labels[i] == preds[i]):
