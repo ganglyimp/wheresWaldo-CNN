@@ -4,7 +4,7 @@ ___
 ### Some Notes
 This CNN uses the [Hey Waldo](https://github.com/vc1492a/Hey-Waldo) dataset.
 
-This program was made as a semester project for a Deep Learning class. Due to lack of time, this network still has some issues. In the Hey-Waldo dataset, there was an imbalance between the "Waldo" and "Not-Waldo" samples (about 80:6000). To rectify this issue, fake "Waldo" samples were created by overlaying a PNG of Waldo over some of the existing "Not-Waldo" samples. This created an overfitting issue where the CNN was great at identifying these fake samples, but struggled to identify actual, unaltered images of Waldo. The network can identify fake Waldo samples with about 90% accuracy, but when given real Waldo samples, the accuracy drops to around 30%. 
+This program was made as a semester project for a Deep Learning class. Due to lack of time, this network still has some issues. In the Hey-Waldo dataset, there was an imbalance between the "Waldo" and "Not-Waldo" samples (about 80:6000). To rectify this issue, fake "Waldo" samples were created by overlaying a PNG of Waldo over some of the existing "Not-Waldo" samples. This created an overfitting issue where the CNN was great at identifying these fake samples, but struggled to identify actual, unaltered images of Waldo. The network can identify fake Waldo samples with about 90% accuracy, but when given real Waldo samples, the accuracy drops to around 30%. To see the types of images this network guesses correctly and incorrectly, refer to the `guesses_correct` and `guesses_incorrect` folders (TP = "true positive", FP = "false positive", etc). 
 
 ___
 ### Instructions for Running
