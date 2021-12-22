@@ -131,11 +131,6 @@ def solveTheWaldo(thePuzzle):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    # Resize tiles to 256x256
-    # Run tiles through CNN
-    # Find tile with highest probability of containing waldo.
-    # Repeat loop
-
 print("INITIALIZING")
 
 print("\tLoading in image set...")
